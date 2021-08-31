@@ -6,8 +6,9 @@ const mongoose = require("mongoose");
 console.log(date);
 
 const app = express();
-//let items =["uno","dos","tres"];
 let workItems = [];
+let defaultItems = [];
+let day = date.getDate();
 
 
 app.use(bodyParser.urlencoded({extended: true}));
@@ -27,66 +28,42 @@ const itemSchema = new mongoose.Schema ({
 const Item = mongoose.model("Item", itemSchema);
 
 
-// const item1 = new Item({
-//      dataItem: "1"
-// });
-// const item2 = new Item({
-//     dataItem: "2"
-// });
-// const item3 = new Item({
-//     dataItem : "3"
-// });
-let defaultItems = [];
-
-
-// Item.insertMany(defaultItems, (err)=>{
-//     if (err){
-//         console.log(err);
-//     } else {
-//         console.log("Successfully inserted = " + defaultItems);
-//     }
-// })
-// ------------------------------------------ HOME
-
-
-app.get("/", function(req,res){
 
 //---------------------------------------------------Find items DB
+function foundItems(){
 Item.find({}, (err, foundItems)=>{
     if (err){
         console.log(err);
     } else {
         defaultItems = foundItems;
-    //    console.log(defaultItems);
+        console.log(defaultItems);
+        }
+})};
+foundItems();
+// ------------------------------------------ HOME
 
-    }
-});
+app.get("/", function(req,res){
 
-let day = date.getDate();
-   res.render("list", {listTitle: day,newListItems: defaultItems});
-   console.log(day);
+//---------------------------------------------------Find items DB
+    foundItems();
+    res.render("list", {listTitle: "Today",newListItems: defaultItems});
+
 });
 
 
 //-------------------------------------------------POST
 app.post("/", (req,res)=>{
-    // console.log(req.body);
-    // let item = req.body.newItem
-    // if (req.body.list === "Work"){
-    //     workItems.push(item);
-    //     res.redirect("/Work");
-    // }else{
-    //     defaultItems.push(item);
-    //     res.redirect("/");
-    // }
+    
+    const itemName = req.body.newItem;
 
-    let itemName = req.body.newItem;
-    console.log(itemName);
-    const item1 = new Item ({
+    
+    console.log("Item Name: "+ itemName);
+    const item = new Item ({
         dataItem: itemName
-    });
-    console.log(item1);
-    item1.save();
+        });
+    item.save();
+    console.log("Item 1: "+item);
+    foundItems();
     res.redirect("/");
 });
 
@@ -109,16 +86,20 @@ app.post("/work",(req,res)=> {
 app.get('/about', (req,res)=>{
     res.render('about');
 });
+
+//=--------------------------------------------------DELETE
 app.post('/delete', (req, res)=>{
-   if (res.body.checkbox !== (undefined)){
+   if (req.body.checkbox !== (undefined)){
         let checkedItemId = (req.body.checkbox).replace(/\s/g, '');
-        console.log(checkedItemId + ".");
         Item.findByIdAndRemove(checkedItemId, (err)=>{
             if (err){
                 console.log(checkedItemId);
                 console.log(err);
             } else {
                 console.log("Succesfully Removed id: " + checkedItemId);
+                foundItems();
+
+                res.redirect("/");
             }
    });
 }});
@@ -126,11 +107,6 @@ app.post('/delete', (req, res)=>{
 
 //---------------------------------------------------- 404
 
-/*app.use((req,res, next) => {
-    res.status(404).render('error404');
-    console.log(res.statusCode);
-})
-*/
 app.get('*', function(req, res){
   res.render('error404');
 });
@@ -144,3 +120,38 @@ app.listen(3000, ()=>{
 });
 
 
+// Item.insertMany(defaultItems, (err)=>{
+//     if (err){
+//         console.log(err);
+//     } else {
+//         console.log("Successfully inserted = " + defaultItems);
+//     }
+// })
+
+
+
+
+
+// console.log(req.body);
+    // let item = req.body.newItem
+    // if (req.body.list === "Work"){
+    //     workItems.push(item);
+    //     res.redirect("/Work");
+    // }else{
+    //     defaultItems.push(item);
+    //     res.redirect("/");
+    // }
+
+
+
+
+
+    // const item1 = new Item({
+//      dataItem: "1"
+// });
+// const item2 = new Item({
+//     dataItem: "2"
+// });
+// const item3 = new Item({
+//     dataItem : "3"
+// });
